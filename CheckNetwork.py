@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, binascii
 from Scripts import ioreg, run, utils
 
 class CheckNetwork:
@@ -47,7 +47,7 @@ class CheckNetwork:
         self.lprint("Current boot-args: {}".format(boot_args or "None set!"))
         self.lprint("")
         self.lprint("Finding NICs...")
-        all_devs = self.i.get_all_devices()
+        all_devs = self.i.get_all_devices(plane="IOService")
         self.lprint("")
         self.lprint("Iterating for devices with matching class-code...")
         nics = [x for x in all_devs.values() if x.get("info",{}).get("class-code","").endswith("0200>")]
@@ -61,10 +61,39 @@ class CheckNetwork:
             self.lprint("")
             for n in nics:
                 n_dict = n.get("info",{})
+                # Get the enX BSD Name - if possible
+                name_check = "+-o {}  <class".format(n["name"])
+                bsd_name = "Not Located"
+                primed = False
+                for line in self.i.get_ioreg():
+                    if name_check in line:
+                        primed = len(line.split("+-o ")[0])
+                        continue
+                    if primed is False:
+                        continue
+                    # We're primed check for "BSD Name" = "
+                    # or if we left our scope
+                    if "+-o " in line and len(line.split("+-o ")[0]) <= primed:
+                        break
+                    if '"BSD Name" = "' in line:
+                        try:
+                            bsd_name = line.split('"BSD Name" = "')[1].split('"')[0]
+                        except:
+                            pass
+                        break
                 loc = n.get("device_path")
                 self.lprint(" - {} - {}".format(n["name"], loc or "Could Not Resolve Device Path"))
-                self.lprint(" --> vendor-id {}".format(n_dict.get("vendor-id","Not Present")))
-                self.lprint(" --> device-id {}".format(n_dict.get("device-id","Not Present")))
+                try:
+                    ven = "0x"+binascii.hexlify(binascii.unhexlify(n_dict["vendor-id"][1:5])[::-1]).decode().upper()
+                except:
+                    ven = "Not Located"
+                try:
+                    dev = "0x"+binascii.hexlify(binascii.unhexlify(n_dict["device-id"][1:5])[::-1]).decode().upper()
+                except:
+                    dev = "Not Located"
+                self.lprint(" --> vendor-id {}".format(ven))
+                self.lprint(" --> device-id {}".format(dev))
+                self.lprint(" --> BSD Name  {}".format(bsd_name))
                 self.lprint(" --> built-in  {}".format("YES" if "built-in" in n_dict or "IOBuiltin" in n_dict else "NO"))
                 self.lprint("")
         print("Saving log...")
