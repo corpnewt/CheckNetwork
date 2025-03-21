@@ -59,7 +59,7 @@ class CheckNetwork:
             self.lprint("")
             self.lprint("Iterating NICs:")
             self.lprint("")
-            for n in nics:
+            for n in sorted(nics, key=lambda x:x.get("device_path","?")):
                 n_dict = n.get("info",{})
                 # Get the enX BSD Name - if possible
                 name_check = "+-o {}  <class".format(n["name"])
