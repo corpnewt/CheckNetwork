@@ -95,6 +95,7 @@ class CheckNetwork:
                 self.lprint(" --> device-id {}".format(dev))
                 self.lprint(" --> BSD Name  {}".format(bsd_name))
                 self.lprint(" --> built-in  {}".format("YES" if "built-in" in n_dict or "IOBuiltin" in n_dict else "NO"))
+                self.lprint(" --> Bridged   {}".format("NO" if "acpi-path" in n_dict else "YES - Needs to be defined in ACPI for DeviceProperties to work!"))
                 self.lprint("")
         print("Saving log...")
         print("")
