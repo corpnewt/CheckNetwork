@@ -61,6 +61,7 @@ class CheckNetwork:
             self.lprint("")
             for n in sorted(nics, key=lambda x:x.get("device_path","?")):
                 n_dict = n.get("info",{})
+                pcidebug_check = n_dict.get("pcidebug","").replace("??:??.?","")
                 # Get the enX BSD Name - if possible
                 name_check = "+-o {}  <class".format(n["name"])
                 bsd_name = "Not Located"
@@ -70,6 +71,12 @@ class CheckNetwork:
                         primed = len(line.split("+-o ")[0])
                         continue
                     if primed is False:
+                        continue
+                    # Make sure se have the right device
+                    # by verifying the pcidebug value
+                    if "pcidebug" in line and not pcidebug_check in line:
+                        # Unprime - wrong device
+                        primed = False
                         continue
                     # We're primed check for "BSD Name" = "
                     # or if we left our scope
