@@ -50,6 +50,7 @@ class CheckNetwork:
         all_devs = self.i.get_all_devices(plane="IOService")
         self.lprint("")
         self.lprint("Iterating for devices with matching class-code...")
+        en0_builtin = False
         nics = [x for x in all_devs.values() if x.get("info",{}).get("class-code","").endswith("0200>")]
         if not nics:
             self.lprint(" - None found!")
@@ -98,11 +99,16 @@ class CheckNetwork:
                     dev = "0x"+binascii.hexlify(binascii.unhexlify(n_dict["device-id"][1:5])[::-1]).decode().upper()
                 except:
                     dev = "Not Located"
+                builtin = "YES" if any(n_dict.get(x) for x in ("built-in","IOBuiltin","acpi-path")) else "NO"
                 self.lprint(" --> vendor-id {}".format(ven))
                 self.lprint(" --> device-id {}".format(dev))
                 self.lprint(" --> BSD Name  {}".format(bsd_name))
-                self.lprint(" --> built-in  {}".format("YES" if "built-in" in n_dict or "IOBuiltin" in n_dict else "NO"))
-                self.lprint(" --> Bridged   {}".format("NO" if "acpi-path" in n_dict else "YES - Needs to be defined in ACPI for DeviceProperties to work!"))
+                self.lprint(" --> built-in  {}".format(builtin))
+                self.lprint("")
+                if bsd_name == "en0" and builtin == "YES":
+                    en0_builtin = True
+            if not en0_builtin:
+                self.lprint("WARNING: en0 is not built-in! iServices and App Store may not function!")
                 self.lprint("")
         print("Saving log...")
         print("")
