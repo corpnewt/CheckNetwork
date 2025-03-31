@@ -64,7 +64,7 @@ class CheckNetwork:
                 n_dict = n.get("info",{})
                 pcidebug_check = n_dict.get("pcidebug","").replace("??:??.?","")
                 # Get the enX BSD Name - if possible
-                name_check = "+-o {}  <class".format(n["name"])
+                name_check = n["line"] # Use the actual line to avoid mismatching
                 bsd_name = "Not Located"
                 primed = False
                 for line in self.i.get_ioreg():
@@ -100,6 +100,9 @@ class CheckNetwork:
                 except:
                     dev = "Not Located"
                 builtin = "YES" if any(n_dict.get(x) for x in ("built-in","IOBuiltin","acpi-path")) else "NO"
+                name = self.i.get_pci_device_name(n_dict,use_unknown=False)
+                if name:
+                    self.lprint(" --> name      {}".format(name))
                 self.lprint(" --> vendor-id {}".format(ven))
                 self.lprint(" --> device-id {}".format(dev))
                 self.lprint(" --> BSD Name  {}".format(bsd_name))
